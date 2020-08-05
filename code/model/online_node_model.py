@@ -87,7 +87,7 @@ class OnlineMultimodalGenerativeCVAE(MultimodalGenerativeCVAE):
             self.add_submodule(edge_type + '/edge_encoder',
                        model_if_absent=nn.LSTM(input_size=2*self.hyperparams['state_dim'],
                                                hidden_size=self.hyperparams['enc_rnn_dim_edge'],
-                                               batch_first=True))
+                                               batch_first=True).to('cuda:4'))
 
 
     def remove_edge_model(self, edge_type, removed_neighbor_nodes):
@@ -163,7 +163,7 @@ class OnlineMultimodalGenerativeCVAE(MultimodalGenerativeCVAE):
             for node in self.removed_neighbors_by_edge_type[edge_type]:
                 # This is adding zeros to the inputs of encoders for removed
                 # edges (until their influence is completely removed).
-                new_inputs_dict[node] = torch.zeros(1, self.hyperparams['state_dim'])
+                new_inputs_dict[node] = torch.zeros(1, self.hyperparams['state_dim']).to('cuda:4')
 
         TD["edge_encoders_orig"] = [self.encode_edge(edge_type, self.neighbors_via_edge_type[edge_type], new_inputs_dict) for edge_type in connected_edge_types] # List of [bs/nbs, enc_rnn_dim]
         TD["total_edge_influence_orig"] = self.encode_total_edge_influence(TD["edge_encoders_orig"], TD["history_encoder_orig"], batch_size) # [bs/nbs, 4*enc_rnn_dim]
