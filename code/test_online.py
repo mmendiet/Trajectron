@@ -20,7 +20,8 @@ from utils import plot_utils, eval_utils
 hyperparams = {
     ### Training
     ## Batch Sizes
-    'batch_size': 16,
+    #'batch_size': 16,
+    'batch_size': 1,
     ## Learning Rate
     'learning_rate': 0.001,
     'min_learning_rate': 0.00001,
@@ -130,7 +131,7 @@ parser.add_argument('--prediction_horizon', help='how many timesteps to predict 
 parser.add_argument('--num_samples', help='how many samples to take during prediction',
                     type=int, default=25)
 parser.add_argument('--plot_online', help='whether to plot predictions online or not',
-                    type=str, default='yes')
+                    type=str, default='no')
 
 parser.add_argument('--seed', help='manual seed to use, default is random',
                     type=int, default=None)
