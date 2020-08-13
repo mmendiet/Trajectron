@@ -122,7 +122,10 @@ class SceneGraph(object):
         # This is because add_node_model in online_dyn_stg will already populate
         # the new model with the correct, new edges since the new scene graph contains them.
         for node in new_nodes:
-            del new_neighbors[node]
+            try:
+                del new_neighbors[node]
+            except:
+                pass
 
         for node in removed_nodes:
             del removed_neighbors[node]

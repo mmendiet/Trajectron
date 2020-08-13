@@ -39,7 +39,7 @@ class MultimodalGenerativeCVAE(object):
 
 
     def add_submodule(self, name, model_if_absent):
-        self.node_modules[name] = self.model_registrar.get_model(name, model_if_absent)
+        self.node_modules[name] = self.model_registrar.get_model(name, model_if_absent).to('cuda:0')
 
 
     def clear_submodules(self):
