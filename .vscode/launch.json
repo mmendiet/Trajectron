@@ -10,8 +10,9 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--device=cuda:4"],
-            "cwd": "${fileDirname}"
+            "args": ["--device=cuda:0", "--eval_device=cuda:0"],
+            "cwd": "${fileDirname}",
+            "justMyCode": true
         }
     ]
 }

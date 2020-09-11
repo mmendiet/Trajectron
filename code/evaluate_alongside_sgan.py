@@ -17,7 +17,7 @@ import pandas as pd
 hyperparams = {
     ### Training
     ## Batch Sizes
-    'batch_size': 16,
+    'batch_size': 1,
     ## Learning Rate
     'learning_rate': 0.002,
     'min_learning_rate': 0.00001,
@@ -111,9 +111,9 @@ parser.add_argument('--incl_robot_node', help="whether to include a robot node i
                     action='store_true')
 
 parser.add_argument('--num_samples', help='how many times to sample from the model',
-                    type=int, default=2000)
+                    type=int, default=1)
 parser.add_argument('--num_runs', help='how many scenes to predict per model evaluation',
-                    type=int, default=100)
+                    type=int, default=1000)
 
 parser.add_argument('--device', help='what device to perform training on',
                     type=str, default='cpu')
@@ -366,25 +366,25 @@ def main():
              sgan_preds_list, sgan_gt_list, eval_inputs, eval_data_dict,
              data_ids, t_predicts, random_scene_idxs, num_runs) = eval_utils.extract_our_and_sgan_preds(dataset_name, hyperparams, args, data_precondition=data_precondition)
 
-            # Computing log-likelihoods from each run.
-            sgan_lls, our_full_lls, our_most_likely_lls, detailed_ll_dict = get_kde_log_likelihoods(
-                data_precondition, dataset_name,
-                our_preds_most_likely_list, our_preds_list,
-                sgan_preds_list, sgan_gt_list, eval_inputs, eval_data_dict,
-                data_ids, t_predicts, random_scene_idxs, num_runs)
-            print('SGAN LLs, Our Method (Full) LLs, Our Method (Most Likely) LLs')
-            print(np.mean(sgan_lls), np.mean(our_full_lls), np.mean(our_most_likely_lls))
-            print('Calculated all KDE LLs for', data_precondition, dataset_name)
+            # # Computing log-likelihoods from each run.
+            # sgan_lls, our_full_lls, our_most_likely_lls, detailed_ll_dict = get_kde_log_likelihoods(
+            #     data_precondition, dataset_name,
+            #     our_preds_most_likely_list, our_preds_list,
+            #     sgan_preds_list, sgan_gt_list, eval_inputs, eval_data_dict,
+            #     data_ids, t_predicts, random_scene_idxs, num_runs)
+            # print('SGAN LLs, Our Method (Full) LLs, Our Method (Most Likely) LLs')
+            # print(np.mean(sgan_lls), np.mean(our_full_lls), np.mean(our_most_likely_lls))
+            # print('Calculated all KDE LLs for', data_precondition, dataset_name)
 
-            print('Saving current log-likelihoods to csv.')
-            pd.DataFrame.from_dict(detailed_ll_dict).to_csv('../sgan-dataset/plots/data/%s_%s_lls.csv' % (data_precondition, dataset_name), index=False)
+            # print('Saving current log-likelihoods to csv.')
+            # pd.DataFrame.from_dict(detailed_ll_dict).to_csv('../sgan-dataset/plots/data/%s_%s_lls.csv' % (data_precondition, dataset_name), index=False)
 
-            # Plotting the trajectories from each run.
-            plot_run_trajs(data_precondition, dataset_name,
-                           our_preds_most_likely_list, our_preds_list,
-                           sgan_preds_list, sgan_gt_list, eval_inputs, eval_data_dict,
-                           data_ids, t_predicts, random_scene_idxs, num_runs)
-            print('Plotted all run trajectories from', data_precondition, dataset_name)
+            # # Plotting the trajectories from each run.
+            # plot_run_trajs(data_precondition, dataset_name,
+            #                our_preds_most_likely_list, our_preds_list,
+            #                sgan_preds_list, sgan_gt_list, eval_inputs, eval_data_dict,
+            #                data_ids, t_predicts, random_scene_idxs, num_runs)
+            # print('Plotted all run trajectories from', data_precondition, dataset_name)
 
             # SGAN Errors
             batch_error_dict, detailed_error_dict = eval_utils.compute_sgan_errors(

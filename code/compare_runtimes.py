@@ -24,11 +24,13 @@ from sgan.data.loader import data_loader
 from sgan.models import TrajectoryGenerator
 from sgan.utils import relative_to_abs, get_dset_path
 
+import statistics
+
 
 hyperparams = {
     ### Training
     ## Batch Sizes
-    'batch_size': 16,
+    'batch_size': 1,
     ## Learning Rate
     'learning_rate': 0.002,
     'min_learning_rate': 0.00001,
@@ -122,9 +124,9 @@ parser.add_argument('--incl_robot_node', help="whether to include a robot node i
                     action='store_true')
 
 parser.add_argument('--num_samples', help='how many times to sample from the model',
-                    type=int, default=200)
+                    type=int, default=1)
 parser.add_argument('--num_runs', help='how many scenes to predict per model evaluation',
-                    type=int, default=10)
+                    type=int, default=1000)
 
 parser.add_argument('--device', help='what device to perform training on',
                     type=str, default='cpu')
@@ -148,21 +150,28 @@ if args.seed is not None:
 
 
 def main():
+    overall_sgan_time = []
+    overall_traj_full_time = []
+    overall_traj_mlz_time = []
     results_dict = {'data_precondition': list(),
                     'dataset': list(),
                     'method': list(),
                     'runtime': list(),
                     'num_samples': list(),
                     'num_agents': list()}
-    data_precondition = 'curr'
+    # data_precondition = 'curr'
+    data_precondition = 'all'
     for dataset_name in ['eth', 'hotel', 'univ', 'zara1', 'zara2']:
         print('At %s dataset' % dataset_name)
+        sgan_time = []
+        traj_full_time = []
+        traj_mlz_time = []
 
         ### SGAN LOADING ###
         sgan_model_path = os.path.join(args.sgan_models_path, '_'.join([dataset_name, '12', 'model.pt']))
 
         checkpoint = torch.load(sgan_model_path, map_location='cpu')
-        generator = eval_utils.get_generator(checkpoint)
+        generator = eval_utils.get_generator(checkpoint).to(args.eval_device)
         _args = AttrDict(checkpoint['args'])
         path = get_dset_path(_args.dataset_name, args.sgan_dset_type)
         print('Evaluating', sgan_model_path, 'on', _args.dataset_name, args.sgan_dset_type)
@@ -211,30 +220,30 @@ def main():
                        'edge_addition_filter': args.edge_addition_filter,
                        'edge_removal_filter': args.edge_removal_filter}
 
-        print('-------------------------')
-        print('| EVALUATION PARAMETERS |')
-        print('-------------------------')
-        print('| checking: %s' % data_precondition)
-        print('| device: %s' % args.device)
-        print('| eval_device: %s' % args.eval_device)
-        print('| edge_radius: %s' % hyperparams['edge_radius'])
-        print('| EE state_combine_method: %s' % hyperparams['edge_state_combine_method'])
-        print('| EIE scheme: %s' % hyperparams['edge_influence_combine_method'])
-        print('| dynamic_edges: %s' % hyperparams['dynamic_edges'])
-        print('| edge_addition_filter: %s' % args.edge_addition_filter)
-        print('| edge_removal_filter: %s' % args.edge_removal_filter)
-        print('| MHL: %s' % hyperparams['minimum_history_length'])
-        print('| PH: %s' % hyperparams['prediction_horizon'])
-        print('| # Samples: %s' % args.num_samples)
-        print('| # Runs: %s' % args.num_runs)
-        print('-------------------------')
+        # print('-------------------------')
+        # print('| EVALUATION PARAMETERS |')
+        # print('-------------------------')
+        # print('| checking: %s' % data_precondition)
+        # print('| device: %s' % args.device)
+        # print('| eval_device: %s' % args.eval_device)
+        # print('| edge_radius: %s' % hyperparams['edge_radius'])
+        # print('| EE state_combine_method: %s' % hyperparams['edge_state_combine_method'])
+        # print('| EIE scheme: %s' % hyperparams['edge_influence_combine_method'])
+        # print('| dynamic_edges: %s' % hyperparams['dynamic_edges'])
+        # print('| edge_addition_filter: %s' % args.edge_addition_filter)
+        # print('| edge_removal_filter: %s' % args.edge_removal_filter)
+        # print('| MHL: %s' % hyperparams['minimum_history_length'])
+        # print('| PH: %s' % hyperparams['prediction_horizon'])
+        # print('| # Samples: %s' % args.num_samples)
+        # print('| # Runs: %s' % args.num_runs)
+        # print('-------------------------')
 
         eval_stg = OnlineSpatioTemporalGraphCVAEModel(None, model_registrar,
                                                 eval_hyperparams, kwargs_dict,
                                                 args.eval_device)
-        print('Created evaluation STG model.')
+        #print('Created evaluation STG model.')
 
-        print('About to begin evaluation computation for %s.' % dataset_name)
+       # print('About to begin evaluation computation for %s.' % dataset_name)
         with torch.no_grad():
             eval_inputs, _ = eval_utils.sample_inputs_and_labels(eval_data_dict, device=args.eval_device)
 
@@ -252,6 +261,7 @@ def main():
                                              replace=False).astype(int)
 
         for scene_idxs in random_scene_idxs:
+        # for scene_idxs in range(0,seq_start_end.shape[0]):
             choice_list = seq_start_end[scene_idxs]
 
             overall_tic = time.time()
@@ -264,15 +274,17 @@ def main():
                 )
 
             overall_toc = time.time()
-            print('SGAN overall', overall_toc - overall_tic)
+            #print('SGAN overall', overall_toc - overall_tic)
             results_dict['data_precondition'].append(data_precondition)
             results_dict['dataset'].append(dataset_name)
             results_dict['method'].append('sgan')
             results_dict['runtime'].append(overall_toc - overall_tic)
             results_dict['num_samples'].append(args.num_samples)
             results_dict['num_agents'].append(int(choice_list[1].item() - choice_list[0].item()))
+            sgan_time.append(overall_toc-overall_tic)
+            overall_sgan_time.append(overall_toc-overall_tic)
 
-        print('Done running SGAN')
+        #print('Done running SGAN')
 
         for node in eval_data_dict['nodes_standardization']:
             for key in eval_data_dict['nodes_standardization'][node]:
@@ -314,13 +326,16 @@ def main():
                                                           args.num_samples,
                                                           most_likely=True)
                 overall_toc = time.time()
-                print('Our MLz overall', overall_toc - overall_tic)
+                #print('Our MLz overall', overall_toc - overall_tic)
                 results_dict['data_precondition'].append(data_precondition)
                 results_dict['dataset'].append(dataset_name)
                 results_dict['method'].append('our_most_likely')
                 results_dict['runtime'].append(overall_toc - overall_tic)
                 results_dict['num_samples'].append(args.num_samples)
                 results_dict['num_agents'].append(len(init_scene_dict))
+                traj_mlz_time.append(overall_toc-overall_tic)
+                overall_traj_mlz_time.append(overall_toc-overall_tic)
+
 
                 overall_tic = time.time()
                 preds_dict_full = eval_stg.forward(init_scene_graph,
@@ -331,15 +346,23 @@ def main():
                                                    args.num_samples,
                                                    most_likely=False)
                 overall_toc = time.time()
-                print('Our Full overall', overall_toc - overall_tic)
+                #print('Our Full overall', overall_toc - overall_tic)
                 results_dict['data_precondition'].append(data_precondition)
                 results_dict['dataset'].append(dataset_name)
                 results_dict['method'].append('our_full')
                 results_dict['runtime'].append(overall_toc - overall_tic)
                 results_dict['num_samples'].append(args.num_samples)
                 results_dict['num_agents'].append(len(init_scene_dict))
+                traj_full_time.append(overall_toc-overall_tic)
+                overall_traj_full_time.append(overall_toc-overall_tic)
 
         pd.DataFrame.from_dict(results_dict).to_csv('../sgan-dataset/plots/data/%s_%s_runtimes.csv' % (data_precondition, dataset_name), index=False)
+        print('SGAN FPS: {}'.format(1/statistics.mean(sgan_time)))
+        print('Traj mlz FPS: {}'.format(1/statistics.mean(traj_mlz_time)))
+        print('Traj full FPS: {}'.format(1/statistics.mean(traj_full_time)))
+    print('Overall SGAN FPS: {}'.format(1/statistics.mean(overall_sgan_time)))
+    print('Overall Traj mlz FPS: {}'.format(1/statistics.mean(overall_traj_mlz_time)))
+    print('Overall Traj full FPS: {}'.format(1/statistics.mean(overall_traj_full_time)))
 
 
 if __name__ == '__main__':

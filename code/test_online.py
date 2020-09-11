@@ -18,6 +18,7 @@ from utils import plot_utils, eval_utils
 
 import statistics
 
+os.system("export CUDA_VISIBLE_DEVICES=4")
 
 hyperparams = {
     ### Training
@@ -158,7 +159,6 @@ if args.seed is not None:
 
 
 def main():
-    os.environ["CUDA_VISIBLE_DEVICES"]="4"
     output_save_dir = 'pred_figs/%s_%s_dyn_edges' % ('full' if args.full_preds else 'z_best', args.dynamic_edges)
     pathlib.Path(output_save_dir).mkdir(parents=True, exist_ok=True)
 

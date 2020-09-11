@@ -108,14 +108,14 @@ def plot_comparison_boxplots(their_mse_errors, their_fse_errors,
         if dataset_name in their_mse_errors and dataset_name in their_fse_errors:
             perf_dict_for_pd['dataset'].extend([dataset_name]*(their_mse_errors[dataset_name].shape[0]))
             perf_dict_for_pd['approach'].extend(['Social GAN']*their_mse_errors[dataset_name].shape[0])
-            perf_dict_for_pd['mse'].extend(their_mse_errors[dataset_name].numpy().tolist())
-            perf_dict_for_pd['fse'].extend(their_fse_errors[dataset_name].numpy().tolist())
+            perf_dict_for_pd['mse'].extend(their_mse_errors[dataset_name].cpu().numpy().tolist())
+            perf_dict_for_pd['fse'].extend(their_fse_errors[dataset_name].cpu().numpy().tolist())
 
         if dataset_name in our_mse_errors and dataset_name in our_fse_errors:
             perf_dict_for_pd['dataset'].extend([dataset_name]*(our_mse_errors[dataset_name].shape[0]))
             perf_dict_for_pd['approach'].extend(['Our Method']*our_mse_errors[dataset_name].shape[0])
-            perf_dict_for_pd['mse'].extend(our_mse_errors[dataset_name].numpy().tolist())
-            perf_dict_for_pd['fse'].extend(our_fse_errors[dataset_name].numpy().tolist())
+            perf_dict_for_pd['mse'].extend(our_mse_errors[dataset_name].cpu().numpy().tolist())
+            perf_dict_for_pd['fse'].extend(our_fse_errors[dataset_name].cpu().numpy().tolist())
 
     dataset_names += ['Average']
 

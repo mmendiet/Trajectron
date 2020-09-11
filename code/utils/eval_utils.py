@@ -391,7 +391,7 @@ def get_generator(checkpoint):
         grid_size=args.grid_size,
         batch_norm=args.batch_norm)
     generator.load_state_dict(checkpoint['g_state'])
-    # generator.cuda()
+    generator.cuda()
     generator.train()
     return generator
 
@@ -565,7 +565,7 @@ def extract_our_and_sgan_preds(dataset_name, hyperparams, args, data_preconditio
                 our_preds_list.append(preds_dict_full)
 
                 for node, value in curr_inputs.items():
-                    if isinstance(node, STGNode) and np.any(value[0, t_predict]):
+                    if isinstance(node, STGNode) and np.any(value[0, t_predict].cpu().numpy()):
                         curr_prev = value[0, t_predict+1-8 : t_predict+1]
                         for seq_agent, sgan_val in sgan_history[run].items():
                             if torch.norm(curr_prev[:, :2] - sgan_val) < 1e-4:
